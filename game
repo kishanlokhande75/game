@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>Flying Bird Game</title>
+<style>
+body {
+  margin: 0;
+  text-align: center;
+  background: #70c5ce;
+  font-family: Arial;
+}
+canvas {
+  background: skyblue;
+  display: block;
+  margin: 20px auto;
+  border: 3px solid white;
+}
+button {
+  padding: 12px 25px;
+  font-size: 18px;
+  background: orange;
+  border: none;
+  border-radius: 8px;
+}
+</style>
+</head>
+<body>
+
+<h2>🐦 Flying Bird Game</h2>
+<h3 id="score">Score: 0</h3>
+
+<canvas id="game" width="350" height="500"></canvas>
+<button onclick="restart()">Restart Game</button>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let bird, pipes, score, gameOver;
+
+function restart() {
+  bird = {x: 60, y: 200, velocity: 0};
+  pipes = [];
+  score = 0;
+  gameOver = false;
+  document.getElementById("score").innerText = "Score: 0";
+}
+
+function jump() {
+  if (!gameOver) bird.velocity = -6;
+}
+
+canvas.addEventListener("click", jump);
+document.addEventListener("keydown", jump);
+
+function update() {
+  if (gameOver) return;
+
+  bird.velocity += 0.3;
+  bird.y += bird.velocity;
+
+  if (pipes.length === 0 ||
+      pipes[pipes.length-1].x < 170) {
+    let gap = 140;
+    let top = Math.random() * 200 + 30;
+    pipes.push({
+      x: 350,
+      top: top,
+      bottom: top + gap,
+      passed: false
+    });
+  }
+
+  pipes.forEach(p => {
+    p.x -= 2;
+
+    if (!p.passed && p.x + 50 < bird.x) {
+      score++;
+      p.passed = true;
+      document.getElementById("score").innerText =
+        "Score: " + score;
+    }
+
+    if (
+      bird.x + 15 > p.x &&
+      bird.x - 15 < p.x + 50 &&
+      (bird.y - 15 < p.top ||
+       bird.y + 15 > p.bottom)
+    ) gameOver = true;
+  });
+
+  pipes = pipes.filter(p => p.x > -50);
+
+  if (bird.y > 485 || bird.y < 0)
+    gameOver = true;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, 350, 500);
+
+  ctx.fillStyle = "green";
+  pipes.forEach(p => {
+    ctx.fillRect(p.x, 0, 50, p.top);
+    ctx.fillRect(p.x, p.bottom, 50, 500-p.bottom);
+  });
+
+  ctx.font = "30px Arial";
+  ctx.fillText("🐦", bird.x-15, bird.y+10);
+
+  if (gameOver) {
+    ctx.fillStyle = "red";
+    ctx.font = "30px Arial";
+    ctx.fillText("GAME OVER", 85, 240);
+  }
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+restart();
+loop();
+</script>
+</body>
+</html>
